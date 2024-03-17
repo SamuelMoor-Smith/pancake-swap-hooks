@@ -21,7 +21,7 @@ import {ICLPoolManager} from "../lib/pancake-v4-core/src/pool-cl/interfaces/ICLP
  *     --slow \
  *     --verify
  */
-contract MintPointsHookInitScript is BaseScript {
+contract LiquidityModScript is BaseScript {
     // using PoolIdLibrary for PoolKey;
     using CLPoolParametersHelper for bytes32;
 
@@ -38,7 +38,6 @@ contract MintPointsHookInitScript is BaseScript {
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-
 
         IHooks hook = IHooks(mintPointsHook);
         ICLPoolManager poolManager = ICLPoolManager(poolManagerAddress);
@@ -58,24 +57,14 @@ contract MintPointsHookInitScript is BaseScript {
             parameters: bytes32(uint256(hook.getHooksRegistrationBitmap())).setTickSpacing(10)
         });
 
-        // console.log("Registering CLPoolManager");
-        // IVault(vaultAddress).registerPoolManager(address(clPoolManager));
+        // create the mod params
+        ICLPoolManager.ModifyLiquidityParams memory params = ICLPoolManager.ModifyLiquidityParams({
+            tickLower: 0,
+            tickUpper: 10,
+            liquidityDelta: 10
+        });
 
-        // poolManager.initialize(key, Constants.SQRT_RATIO_1_1, new bytes(0));
-        // Printing parameters to the terminal
-        console.log("Initializing pool with parameters:");
-        console.log("Currency0 Address:", currency0Address);
-        console.log("Currency1 Address:", currency1Address);
-        console.log("Hooks Address:", address(hook));
-        console.log("Pool Manager Address:", poolManagerAddress);
-        console.log("Fee:", 0); // Assuming fee is 0 for demonstration
-        // console.log for bytes32 might not work directly, consider converting to string if needed
-        // console.log("Pool Id:", key.parameters.toString());
-
-        console.log("Initializing pool...");
-        poolManager.initialize(key, Constants.SQRT_RATIO_1_1, new bytes(0));
-
-        console.log("Pool initialized successfully.");
+        poolManager.modifyLiquidity(key, params, new bytes(0));
 
         vm.stopBroadcast();
     }
